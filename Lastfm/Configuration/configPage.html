@@ -9,228 +9,95 @@
         <style>
             /* Emby 4.9+ renders plugin configuration pages as an overlay; the old
                data-role="page" classes no longer provide a background, so the page
-               content bleeds through whatever is underneath. Give it a solid
-               background and padding. The style tag lives inside the page div
-               because Emby strips <head> when injecting plugin pages. */
+               content bleeds through whatever is underneath. The style tag lives
+               inside the page div because Emby strips <head> when injecting pages.
+
+               NOTE: Emby 4.9 does NOT execute inline <script> inside plugin pages,
+               so this page intentionally uses only plain HTML: a native form POST
+               and native links, no JavaScript at all. */
             #LastfmScrobblerConfigurationPage {
                 background: #ffffff;
                 min-height: 100%;
                 padding: 1.5em 2em;
                 box-sizing: border-box;
+                color: #222;
             }
             #LastfmScrobblerConfigurationPage .sectionTitle {
                 font-size: 1.2em;
                 font-weight: 600;
                 margin-bottom: 0.6em;
             }
+            #LastfmScrobblerConfigurationPage ol {
+                line-height: 1.9;
+                padding-left: 1.4em;
+            }
+            #LastfmScrobblerConfigurationPage label {
+                display: block;
+                font-weight: 600;
+                margin: 0.9em 0 0.25em;
+            }
+            #LastfmScrobblerConfigurationPage input[type=text],
+            #LastfmScrobblerConfigurationPage input[type=password] {
+                width: 100%;
+                max-width: 34em;
+                box-sizing: border-box;
+                padding: 0.5em 0.6em;
+                border: 1px solid #bbb;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            #LastfmScrobblerConfigurationPage .lfm-btn {
+                display: inline-block;
+                margin-top: 1em;
+                margin-right: 0.5em;
+                padding: 0.6em 1.2em;
+                border: 0;
+                border-radius: 4px;
+                background: #00a4dc;
+                color: #fff !important;
+                font-size: 14px;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            #LastfmScrobblerConfigurationPage .lfm-btn-green { background: #4caf50; }
         </style>
 
         <div data-role="content">
             <div class="content-primary">
                 <div class="sectionTitle">Last.fm 授权（API Key + Token 流程）</div>
-                <div class="paperList" style="margin-bottom: 1em;">
-                    <div class="listItem">
-                        <div class="listItemBody">
-                            <div>
-                                1. 用你的 Last.fm 账号在 <a href="https://www.last.fm/api/account/create" target="_blank">https://www.last.fm/api/account/create</a> 免费注册一个 API 应用，拿到 <b>API Key</b> 和 <b>Shared Secret</b>（Callback URL 可留空）。
-                            </div>
-                            <div>
-                                2. 把 Key / Secret 填到下方并点“保存 API 配置”。
-                            </div>
-                            <div>
-                                3. 点“① 获取授权链接”，在打开的 Last.fm 页面登录并点击允许（Authorize）。
-                            </div>
-                            <div>
-                                4. 回到本页点“② 完成授权”，看到“已授权用户”即成功，之后播放音乐即自动 scrobble。
-                            </div>
-                        </div>
+
+                <ol>
+                    <li>用你的 Last.fm 账号在
+                        <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">https://www.last.fm/api/account/create</a>
+                        免费注册一个 API 应用（Callback URL 可留空），拿到 <b>API Key</b> 和 <b>Shared Secret</b>。</li>
+                    <li>把 Key / Secret 填到下方，点「保存 API 配置」。</li>
+                    <li>点「① 获取授权链接」，浏览器会跳转到 Last.fm 授权页，登录并点击「允许（Authorize）」。</li>
+                    <li>回到本页点「② 完成授权」，看到“授权成功”即完成，之后播放音乐即自动 scrobble。</li>
+                </ol>
+
+                <form method="post" action="../Lastfm/SaveConfig">
+                    <label for="apiKey">API Key</label>
+                    <input is="emby-input" id="apiKey" name="ApiKey" type="text" autocomplete="off" />
+
+                    <label for="apiSecret">Shared Secret</label>
+                    <input is="emby-input" id="apiSecret" name="ApiSecret" type="password" autocomplete="off" />
+
+                    <div>
+                        <button is="emby-button" type="submit" class="lfm-btn"><span>保存 API 配置</span></button>
                     </div>
+                </form>
+
+                <div>
+                    <a class="lfm-btn lfm-btn-green" href="../Lastfm/AuthRedirect" target="_blank" rel="noopener">① 获取授权链接</a>
+                    <a class="lfm-btn lfm-btn-green" href="../Lastfm/CompleteAuthRedirect" target="_blank" rel="noopener">② 完成授权</a>
                 </div>
 
-                <form id="LastfmScrobblerConfigurationForm">
-                    <div class="inputContainer">
-                        <input is="emby-input" id="apiKey" name="apiKey" type="text" label="API Key:" />
-                    </div>
-                    <div class="inputContainer">
-                        <input is="emby-input" id="apiSecret" name="apiSecret" type="password" label="Shared Secret:" />
-                    </div>
-                    <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block"><span>保存 API 配置</span></button>
-                    </div>
-                    <div style="margin-top:1em;">
-                        <button is="emby-button" type="button" id="btnAuthUrl" class="raised button-submit block"><span>① 获取授权链接</span></button>
-                    </div>
-                    <div style="margin-top:0.5em;">
-                        <button is="emby-button" type="button" id="btnCompleteAuth" class="raised button-submit block"><span>② 完成授权</span></button>
-                    </div>
-                    <div id="authStatus" class="fieldDescription" style="margin-top:1em;"></div>
-                </form>
+                <p style="color:#666;font-size:13px;margin-top:1.2em;">
+                    说明：保存配置只保存 Key/Secret，不会显示已保存值；授权状态在「② 完成授权」的结果页里显示。
+                    如果 Emby 重启过，授权 token 会失效，需要重新从①开始。
+                </p>
             </div>
         </div>
-
-        <script type="text/javascript">
-            (function () {
-                var pageId = 'LastfmScrobblerConfigurationPage';
-                var pluginId = 'de7fe7f0-b048-439e-a431-b1a7e99c930d';
-                var bound = false;
-                var config = null;
-
-                function msg(m) {
-                    try {
-                        if (window.Dashboard && Dashboard.showMessage) { Dashboard.showMessage(m); return; }
-                    } catch (e) { }
-                    alert(m);
-                }
-
-                function err(m) {
-                    try {
-                        if (window.Dashboard && Dashboard.showError) { Dashboard.showError(m); return; }
-                    } catch (e) { }
-                    alert('错误: ' + m);
-                }
-
-                function q(sel) {
-                    var page = document.getElementById(pageId);
-                    return page ? page.querySelector(sel) : null;
-                }
-
-                function updateAuthStatus() {
-                    var el = q('#authStatus');
-                    if (!el) return;
-                    if (config && config.SessionKey) {
-                        el.innerHTML = '<b>已授权用户：</b>' + (config.LastfmUsername || '?') + '（session key 已保存，scrobble 已启用）';
-                    } else {
-                        el.textContent = '尚未授权。请先保存 API 配置，然后点击“① 获取授权链接”。';
-                    }
-                }
-
-                function loadConfig() {
-                    return ApiClient.getPluginConfiguration(pluginId).then(function (c) {
-                        config = c || {};
-                        var k = q('#apiKey');
-                        var s = q('#apiSecret');
-                        if (k) k.value = config.ApiKey || '';
-                        if (s) s.value = config.ApiSecret || '';
-                        updateAuthStatus();
-                    });
-                }
-
-                function saveConfig() {
-                    var k = q('#apiKey');
-                    var s = q('#apiSecret');
-                    config = config || {};
-                    config.ApiKey = k ? k.value.trim() : '';
-                    config.ApiSecret = s ? s.value.trim() : '';
-                    return ApiClient.updatePluginConfiguration(pluginId, config);
-                }
-
-                // fetch-based POST so we do not depend on ApiClient.ajax
-                function postJson(path, data) {
-                    var url = ApiClient.getUrl(path);
-                    var headers = { 'Content-Type': 'application/json' };
-                    try {
-                        var token = ApiClient.accessToken && ApiClient.accessToken();
-                        if (token) headers['X-Emby-Token'] = token;
-                    } catch (e) { }
-
-                    return fetch(url, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(data || {})
-                    }).then(function (r) {
-                        return r.text().then(function (t) {
-                            try { return JSON.parse(t); } catch (e) { return { Error: t || ('HTTP ' + r.status) }; }
-                        });
-                    });
-                }
-
-                function onSubmitForm(e) {
-                    e.preventDefault();
-                    saveConfig().then(function () {
-                        msg('API 配置已保存');
-                    }).catch(function (e2) {
-                        err('保存失败: ' + (e2 && e2.message ? e2.message : e2));
-                    });
-                }
-
-                function onGetAuthUrl(e) {
-                    e.preventDefault();
-                    var k = q('#apiKey');
-                    var apiKey = k ? k.value.trim() : '';
-                    if (!apiKey) { err('请先填写 API Key'); return; }
-
-                    saveConfig().then(function () {
-                        return postJson('Lastfm/GetAuthUrl', { ApiKey: apiKey });
-                    }).then(function (data) {
-                        if (data && data.Url) {
-                            window.open(data.Url, '_blank');
-                            msg('已在新窗口打开授权页。请登录 Last.fm 并点击允许，然后回到本页点“② 完成授权”。');
-                        } else {
-                            err((data && data.Error) || '获取授权链接失败');
-                        }
-                    }).catch(function (e2) {
-                        err('请求失败: ' + (e2 && e2.message ? e2.message : e2));
-                    });
-                }
-
-                function onCompleteAuth(e) {
-                    e.preventDefault();
-                    postJson('Lastfm/CompleteAuth', {}).then(function (data) {
-                        if (data && data.Name) {
-                            config = config || {};
-                            config.SessionKey = data.SessionKey;
-                            config.LastfmUsername = data.Name;
-                            ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
-                                updateAuthStatus();
-                                msg('授权成功：' + data.Name);
-                            });
-                        } else {
-                            err((data && data.Error) || '完成授权失败');
-                        }
-                    }).catch(function (e2) {
-                        err('请求失败: ' + (e2 && e2.message ? e2.message : e2));
-                    });
-                }
-
-                function init() {
-                    var page = document.getElementById(pageId);
-                    if (!page || !document.body.contains(page)) return;
-                    if (bound) return;
-                    bound = true;
-
-                    var form = page.querySelector('#LastfmScrobblerConfigurationForm');
-                    var btnAuth = page.querySelector('#btnAuthUrl');
-                    var btnDone = page.querySelector('#btnCompleteAuth');
-
-                    if (form) form.addEventListener('submit', onSubmitForm);
-                    if (btnAuth) btnAuth.addEventListener('click', onGetAuthUrl);
-                    if (btnDone) btnDone.addEventListener('click', onCompleteAuth);
-
-                    loadConfig().catch(function (e) {
-                        console.error('lastfm config load failed', e);
-                    });
-                }
-
-                // Emby 4.8+ dispatches native 'viewshow'; legacy pages use jQuery
-                // 'pageshow'. Listen for both AND try immediately — when Emby
-                // injects this page the script runs after the div is already in
-                // the DOM, so a direct init() call usually succeeds.
-                document.addEventListener('viewshow', function (e) {
-                    var t = e.target;
-                    if (t && (t.id === pageId || (t.querySelector && t.querySelector('#' + pageId)))) {
-                        init();
-                    }
-                });
-
-                if (window.$) {
-                    $(document).on('pageshow', '#' + pageId, init);
-                }
-
-                document.addEventListener('DOMContentLoaded', init);
-
-                init();
-            })();
-        </script>
     </div>
 </body>
 </html>
