@@ -75,6 +75,24 @@ namespace Lastfm
 
         private IResponse Response => Request.Response;
 
+        /// <summary>
+        /// Once a session key exists the auth endpoints lock themselves to
+        /// prevent anonymous reconfiguration. To unlock: remove SessionKey
+        /// from plugins/configurations/Lastfm.xml and restart Emby.
+        /// </summary>
+        private static bool IsLocked
+        {
+            get
+            {
+                var c = Plugin.Instance != null ? Plugin.Instance.PluginConfiguration : null;
+                return c != null && !string.IsNullOrWhiteSpace(c.SessionKey);
+            }
+        }
+
+        private const string LockedMessage =
+            "当前已完成授权（session key 已存在），授权接口已自动锁定。" +
+            "如需重新授权，请删除 plugins/configurations/Lastfm.xml 中的 SessionKey 行并重启 Emby。";
+
         public RestApi(IJsonSerializer jsonSerializer, IHttpClient httpClient)
         {
             _apiClient = new LastfmApiClient(httpClient, jsonSerializer);
@@ -86,6 +104,8 @@ namespace Lastfm
 
         public async Task<object> Post(GetAuthUrlRequest request)
         {
+            if (IsLocked) return new { Error = LockedMessage };
+
             var config = Plugin.Instance.PluginConfiguration;
 
             if (!string.IsNullOrWhiteSpace(request.ApiKey))
@@ -115,6 +135,8 @@ namespace Lastfm
 
         public async Task<object> Post(CompleteAuthRequest request)
         {
+            if (IsLocked) return new { Error = LockedMessage };
+
             var token = !string.IsNullOrWhiteSpace(request.Token) ? request.Token : _pendingToken;
 
             if (string.IsNullOrWhiteSpace(token))
@@ -145,6 +167,12 @@ namespace Lastfm
 
         public void Post(SaveConfigRequest request)
         {
+            if (IsLocked)
+            {
+                Response.Redirect("../web/index.html#!/configurationpage?name=lastfm");
+                return;
+            }
+
             var config = Plugin.Instance.PluginConfiguration;
             if (!string.IsNullOrWhiteSpace(request.ApiKey))
                 config.ApiKey = request.ApiKey.Trim();
@@ -159,6 +187,12 @@ namespace Lastfm
 
         public async Task Get(AuthRedirectRequest request)
         {
+            if (IsLocked)
+            {
+                await WriteHtmlAsync("已授权", LockedMessage).ConfigureAwait(false);
+                return;
+            }
+
             var config = Plugin.Instance.PluginConfiguration;
 
             if (string.IsNullOrWhiteSpace(config.ApiKey))
@@ -190,6 +224,12 @@ namespace Lastfm
 
         public async Task Get(CompleteAuthRedirectRequest request)
         {
+            if (IsLocked)
+            {
+                await WriteHtmlAsync("已授权", LockedMessage).ConfigureAwait(false);
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_pendingToken))
             {
                 await WriteHtmlAsync("缺少授权 token", "请先点击「① 获取授权链接」并在 Last.fm 页面完成授权。如果刚重启过 Emby，请重新从①开始。").ConfigureAwait(false);
