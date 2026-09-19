@@ -1,4 +1,4 @@
-﻿namespace Lastfm.Utils
+namespace Lastfm.Utils
 {
     using MediaBrowser.Controller.Entities;
     using Models;
@@ -30,6 +30,30 @@
                 return GetUser(g);
 
             return null;
+        }
+
+        /// <summary>
+        /// The plugin now uses a single global Last.fm account authorised via
+        /// the token flow (auth.getToken -> user authorises -> auth.getSession).
+        /// This replaces the old per-user username/password binding.
+        /// </summary>
+        public static LastfmUser GetGlobalUser()
+        {
+            var config = Plugin.Instance?.PluginConfiguration;
+
+            if (config == null || string.IsNullOrWhiteSpace(config.SessionKey))
+                return null;
+
+            return new LastfmUser
+            {
+                Username = config.LastfmUsername,
+                SessionKey = config.SessionKey,
+                Options = new LastFmUserOptions
+                {
+                    Scrobble = true,
+                    SyncFavourites = false
+                }
+            };
         }
     }
 }

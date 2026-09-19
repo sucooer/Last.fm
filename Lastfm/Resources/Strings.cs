@@ -1,4 +1,4 @@
-﻿namespace Lastfm.Resources
+namespace Lastfm.Resources
 {
     public static class Strings
     {
@@ -11,7 +11,8 @@
         {
             public static string Scrobble         = "track.scrobble";
             public static string NowPlaying       = "track.updateNowPlaying";
-            public static string GetMobileSession = "auth.getMobileSession";
+            public static string GetToken         = "auth.getToken";
+            public static string GetSession       = "auth.getSession";
             public static string TrackLove        = "track.love";
             public static string TrackUnlove      = "track.unlove";
             public static string GetLovedTracks   = "user.getLovedTracks";
@@ -20,10 +21,9 @@
             public static string GetArtistTracks  = "user.getArtistTracks";
         }
 
-        public static class Keys
-        {
-            public static string LastfmApiKey     = "cb3bdcd415fcb40cd572b137b2b255f5";
-            public static string LastfmApiSeceret = "3a08f9fad6ddc4c35b0dce0062cecb5e";
-        }
+        // NOTE: API credentials are no longer hard-coded.
+        // Last.fm suspended the old shared plugin key (error 26), so the
+        // ApiKey / ApiSecret are now read from PluginConfiguration.
+        // Register your own free application at https://www.last.fm/api/account/create
     }
 }

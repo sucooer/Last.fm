@@ -1,4 +1,4 @@
-﻿namespace Lastfm
+namespace Lastfm
 {
     using Api;
     using Configuration;
@@ -74,7 +74,7 @@
             if (!e.SaveReason.Equals(UserDataSaveReason.UpdateUserRating))
                 return;
 
-            var lastfmUser = Utils.UserHelpers.GetUser(e.User.Id);
+            var lastfmUser = Utils.UserHelpers.GetGlobalUser();
             if (lastfmUser == null)
             {
                 Plugin.Logger.Debug("Could not find user");
@@ -140,7 +140,7 @@
                 return;
             }
 
-            var lastfmUser = Utils.UserHelpers.GetUser(user);
+            var lastfmUser = Utils.UserHelpers.GetGlobalUser();
             if (lastfmUser == null)
             {
                 Plugin.Logger.Debug("Could not find last.fm user");
@@ -190,7 +190,7 @@
                 return;
             }
 
-            var lastfmUser = Utils.UserHelpers.GetUser(user);
+            var lastfmUser = Utils.UserHelpers.GetGlobalUser();
             if (lastfmUser == null)
             {
                 Plugin.Logger.Debug("Could not find last.fm user");

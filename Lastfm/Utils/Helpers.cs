@@ -1,4 +1,4 @@
-﻿namespace Lastfm.Utils
+namespace Lastfm.Utils
 {
     using MediaBrowser.Controller.Entities.Audio;
     using Models;
@@ -62,8 +62,8 @@
             foreach (var item in data.OrderBy(x => x.Key))
                 s.Append(String.Format("{0}{1}", item.Key, item.Value));
 
-            //Append seceret
-            s.Append(Strings.Keys.LastfmApiSeceret);
+            //Append shared secret from plugin configuration
+            s.Append(Plugin.Instance?.PluginConfiguration?.ApiSecret ?? string.Empty);
 
             return CreateMd5Hash(s.ToString());
         }

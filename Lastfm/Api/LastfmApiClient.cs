@@ -1,4 +1,4 @@
-﻿namespace Lastfm.Api
+namespace Lastfm.Api
 {
     using MediaBrowser.Common.Net;
     using MediaBrowser.Controller.Entities.Audio;
@@ -17,26 +17,42 @@
     {
         public LastfmApiClient(IHttpClient httpClient, IJsonSerializer jsonSerializer) : base(httpClient, jsonSerializer) { }
 
-        public async Task<MobileSessionResponse> RequestSession(string username, string password)
+        /// <summary>
+        /// Step 1 of the token authorisation flow.
+        /// auth.getToken - asks Last.fm for a fresh authorisation token.
+        /// </summary>
+        public async Task<AuthTokenResponse> GetAuthToken()
         {
-            //Build request object
-            var request = new MobileSessionRequest
+            var request = new BaseRequest
             {
-                Username = username,
-                Password = password,
-
-                ApiKey   = Strings.Keys.LastfmApiKey,
-                Method   = Strings.Methods.GetMobileSession,
-                Secure   = true
+                ApiKey = GetApiKey(),
+                Method = Strings.Methods.GetToken,
+                Secure = true
             };
 
-            var response = await Post<MobileSessionRequest, MobileSessionResponse>(request);
+            return await Get<BaseRequest, AuthTokenResponse>(request).ConfigureAwait(false);
+        }
 
-            //Log the key for debugging
-            if (response != null)
-                Plugin.Logger.Info("{0} successfully logged into Last.fm", username);
+        /// <summary>
+        /// Step 3 of the token authorisation flow (after the user has authorised
+        /// in the browser). auth.getSession - exchanges the token for a session key.
+        /// </summary>
+        public async Task<MobileSessionResponse> GetSession(string token)
+        {
+            var request = new GetSessionRequest
+            {
+                Token = token,
+                ApiKey = GetApiKey(),
+                Method = Strings.Methods.GetSession,
+                Secure = true
+            };
 
-            return response;
+            return await Post<GetSessionRequest, MobileSessionResponse>(request).ConfigureAwait(false);
+        }
+
+        private static string GetApiKey()
+        {
+            return Plugin.Instance?.PluginConfiguration?.ApiKey ?? string.Empty;
         }
 
         public async Task Scrobble(Audio item, LastfmUser user)
@@ -47,7 +63,7 @@
                 Artist     = item.Artists.FirstOrDefault(),
                 Timestamp  = Helpers.CurrentTimestamp(),
 
-                ApiKey     = Strings.Keys.LastfmApiKey,
+                ApiKey     = GetApiKey(),
                 Method     = Strings.Methods.Scrobble,
                 SessionKey = user.SessionKey
             };
@@ -84,7 +100,7 @@
                 Track  = item.Name,
                 Artist = item.Artists.FirstOrDefault(),
 
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = GetApiKey(),
                 Method = Strings.Methods.NowPlaying,
                 SessionKey = user.SessionKey
             };
@@ -131,7 +147,7 @@
                 Artist = item.Artists.FirstOrDefault(),
                 Track  = item.Name,
 
-                ApiKey     = Strings.Keys.LastfmApiKey,
+                ApiKey     = GetApiKey(),
                 Method     = love ? Strings.Methods.TrackLove : Strings.Methods.TrackUnlove,
                 SessionKey = user.SessionKey,
             };
@@ -173,7 +189,7 @@
             var request = new GetLovedTracksRequest
             {
                 User   = user.Username,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = GetApiKey(),
                 Method = Strings.Methods.GetLovedTracks
             };
 
@@ -186,7 +202,7 @@
             {
                 User   = user.Username,
                 Artist = artist.Name,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = GetApiKey(),
                 Method = Strings.Methods.GetTracks,
                 Limit  = 1000
             };
@@ -199,7 +215,7 @@
             var request = new GetTracksRequest
             {
                 User   = user.Username,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = GetApiKey(),
                 Method = Strings.Methods.GetTracks,
                 Limit  = limit,
                 Page   = page
@@ -214,7 +230,7 @@
             {
                 User = user.Username,
                 Artist = artist.Name,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = GetApiKey(),
                 Method = Strings.Methods.GetArtistTracks,
                 Limit = limit,
                 Page = page

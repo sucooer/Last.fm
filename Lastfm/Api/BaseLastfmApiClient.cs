@@ -1,4 +1,4 @@
-﻿namespace Lastfm.Api
+namespace Lastfm.Api
 {
     using MediaBrowser.Common.Net;
     using MediaBrowser.Model.Serialization;
@@ -109,7 +109,7 @@
         #region Private methods
         private static string BuildGetUrl(Dictionary<string, string> requestData)
         {
-            return String.Format("http://{0}/{1}/?format=json&{2}",
+            return String.Format("https://{0}/{1}/?format=json&{2}",
                                     Strings.Endpoints.LastfmApi,
                                     ApiVersion,
                                     Helpers.DictionaryToQueryString(requestData)

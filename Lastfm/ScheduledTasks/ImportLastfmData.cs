@@ -1,4 +1,4 @@
-﻿namespace Lastfm.ScheduledTasks
+namespace Lastfm.ScheduledTasks
 {
     using Api;
     using MediaBrowser.Common.Net;
@@ -62,19 +62,17 @@
 
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-            //Get all users
-            var users = _userManager.Users.Where(u =>
-            {
-                var user = UserHelpers.GetUser(u);
+            // Global Last.fm authorisation (token flow): once the plugin holds a
+            // session key, import data for every Emby user.
+            var globalUser = UserHelpers.GetGlobalUser();
 
-                return user != null && !String.IsNullOrWhiteSpace(user.SessionKey);
-            }).ToList();
-
-            if (users.Count == 0)
+            if (globalUser == null)
             {
-                Plugin.Logger.Info("No users found");
+                Plugin.Logger.Info("Last.fm is not authorised yet; skipping import");
                 return;
             }
+
+            var users = _userManager.Users.ToList();
 
             Plugin.Syncing = true;
 
@@ -104,7 +102,7 @@
                 .Cast<MusicArtist>()
                 .ToList();
 
-            var lastFmUser = UserHelpers.GetUser(user);
+            var lastFmUser = UserHelpers.GetGlobalUser();
 
             var totalSongs = 0;
             var matchedSongs = 0;

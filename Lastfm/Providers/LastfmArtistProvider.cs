@@ -1,4 +1,4 @@
-﻿using MediaBrowser.Common.Extensions;
+using MediaBrowser.Common.Extensions;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
@@ -24,8 +24,11 @@ namespace Lastfm.Providers
         private readonly IJsonSerializer _json;
         private readonly IHttpClient _httpClient;
 
-        internal const string RootUrl = @"http://ws.audioscrobbler.com/2.0/?";
-        internal static string ApiKey = "7b76553c3eb1d341d642755aecc40a33";
+        internal const string RootUrl = @"https://ws.audioscrobbler.com/2.0/?";
+        internal static string ApiKey
+        {
+            get { return Lastfm.Plugin.Instance?.PluginConfiguration?.ApiKey ?? string.Empty; }
+        }
 
         private readonly IServerConfigurationManager _config;
         private readonly ILogger _logger;
