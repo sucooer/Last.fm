@@ -165,13 +165,21 @@ namespace Lastfm
 
             if (tokenResponse == null || string.IsNullOrWhiteSpace(tokenResponse.Token))
             {
-                await WriteHtmlAsync("获取授权 token 失败", tokenResponse != null ? tokenResponse.Message : "网络或 API key 问题，请检查 API Key 是否正确、服务器能否访问 ws.audioscrobbler.com。").ConfigureAwait(false);
+                var detail = tokenResponse != null
+                    ? "Last.fm 返回 error " + tokenResponse.ErrorCode + ": " + HtmlEncode(tokenResponse.Message)
+                    : "网络错误，服务器无法访问 ws.audioscrobbler.com。";
+                Plugin.Logger.Error("[Lastfm] AuthRedirect getToken failed: {0}", detail);
+                await WriteHtmlAsync("获取授权 token 失败", detail + "<br/>请检查 API Key 是否正确、服务器能否访问 ws.audioscrobbler.com。").ConfigureAwait(false);
                 return;
             }
 
             _pendingToken = tokenResponse.Token;
 
-            Response.Redirect(BuildAuthUrl(config.ApiKey, tokenResponse.Token));
+            var authUrl = BuildAuthUrl(config.ApiKey, tokenResponse.Token);
+            Plugin.Logger.Info("[Lastfm] AuthRedirect: token {0}..., redirecting to {1}",
+                tokenResponse.Token.Substring(0, Math.Min(8, tokenResponse.Token.Length)), authUrl);
+
+            Response.Redirect(authUrl);
         }
 
         public async Task Get(CompleteAuthRedirectRequest request)
@@ -186,7 +194,14 @@ namespace Lastfm
 
             if (sessionResponse == null || sessionResponse.Session == null)
             {
-                await WriteHtmlAsync("授权失败", sessionResponse != null ? sessionResponse.Message : "未知错误。请确认已在 Last.fm 授权页面点击过「允许」，然后重试。").ConfigureAwait(false);
+                var detail = sessionResponse != null
+                    ? "Last.fm 返回 error " + sessionResponse.ErrorCode + ": " + HtmlEncode(sessionResponse.Message)
+                    : "网络错误或响应解析失败。";
+                Plugin.Logger.Error("[Lastfm] CompleteAuth getSession failed: {0}", detail);
+                await WriteHtmlAsync("授权失败", detail +
+                    "<br/><br/>常见原因：<br/>1. 还没有在 Last.fm 授权页面点击「允许（Authorize）」——请先点①完成网页授权。<br/>" +
+                    "2. token 已过期（有效期 60 分钟）或已被使用——请重新从①开始，并在打开 Last.fm 页面后尽快完成授权。<br/>" +
+                    "3. Shared Secret 填写错误也会导致换 session 失败，请检查配置。").ConfigureAwait(false);
                 return;
             }
 
@@ -206,7 +221,9 @@ namespace Lastfm
 
         private static string BuildAuthUrl(string apiKey, string token)
         {
-            return "http://www.last.fm/api/auth/?api_key=" + Uri.EscapeDataString(apiKey) +
+            // NOTE: must be https - last.fm 301-redirects http and the token
+            // query parameter can get dropped, showing "token is invalid".
+            return "https://www.last.fm/api/auth/?api_key=" + Uri.EscapeDataString(apiKey) +
                    "&token=" + Uri.EscapeDataString(token);
         }
 
