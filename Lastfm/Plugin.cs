@@ -1,4 +1,4 @@
-﻿namespace Lastfm
+namespace Lastfm
 {
     using Configuration;
     using MediaBrowser.Common.Configuration;
@@ -44,7 +44,11 @@
                 new PluginPageInfo
                 {
                     Name = "lastfm",
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html"
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html",
+                    EnableInMainMenu = true,
+                    MenuSection = "server",
+                    MenuIcon = "audiotrack",
+                    DisplayName = "Last.fm"
                 }
             };
         }

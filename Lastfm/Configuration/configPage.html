@@ -2,27 +2,28 @@
 <html>
 <head>
     <title>Last.fm Scrobbler Configuration</title>
-    <style>
-        /* Emby 4.9+ renders plugin configuration pages as an overlay; the old
-           data-role="page" classes no longer provide a background, so the page
-           content bleeds through whatever is underneath. Give it a solid
-           background and padding. */
-        #LastfmScrobblerConfigurationPage {
-            background: #ffffff;
-            min-height: 100%;
-            padding: 1.5em 2em;
-            box-sizing: border-box;
-        }
-        #LastfmScrobblerConfigurationPage .sectionTitle {
-            font-size: 1.2em;
-            font-weight: 600;
-            margin-bottom: 0.6em;
-        }
-    </style>
 </head>
 <body>
     <div id="LastfmScrobblerConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button">
 
+        <style>
+            /* Emby 4.9+ renders plugin configuration pages as an overlay; the old
+               data-role="page" classes no longer provide a background, so the page
+               content bleeds through whatever is underneath. Give it a solid
+               background and padding. The style tag lives inside the page div
+               because Emby strips <head> when injecting plugin pages. */
+            #LastfmScrobblerConfigurationPage {
+                background: #ffffff;
+                min-height: 100%;
+                padding: 1.5em 2em;
+                box-sizing: border-box;
+            }
+            #LastfmScrobblerConfigurationPage .sectionTitle {
+                font-size: 1.2em;
+                font-weight: 600;
+                margin-bottom: 0.6em;
+            }
+        </style>
         <div data-role="content">
             <div class="content-primary">
                 <div class="sectionTitle">Last.fm 授权（API Key + Token 流程）</div>
