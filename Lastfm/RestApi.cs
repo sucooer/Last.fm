@@ -2,6 +2,7 @@ namespace Lastfm
 {
     using Api;
     using MediaBrowser.Common.Net;
+    using MediaBrowser.Controller.Net;
     using MediaBrowser.Model.Serialization;
     using MediaBrowser.Model.Services;
     using System;
@@ -13,6 +14,7 @@ namespace Lastfm
     /// Step 1 (POST, kept for API / diagnostics) - returns an authorisation URL.
     /// </summary>
     [Route("/Lastfm/GetAuthUrl", "POST")]
+    [Unauthenticated]
     public class GetAuthUrlRequest
     {
         public string ApiKey { get; set; }
@@ -22,6 +24,7 @@ namespace Lastfm
     /// Step 2 (POST, kept for API / diagnostics) - exchanges the token for a session key.
     /// </summary>
     [Route("/Lastfm/CompleteAuth", "POST")]
+    [Unauthenticated]
     public class CompleteAuthRequest
     {
         public string Token { get; set; }
@@ -32,6 +35,7 @@ namespace Lastfm
     /// to the configuration page. Zero-JS friendly.
     /// </summary>
     [Route("/Lastfm/SaveConfig", "POST")]
+    [Unauthenticated]
     public class SaveConfigRequest : IReturnVoid
     {
         public string ApiKey { get; set; }
@@ -43,6 +47,7 @@ namespace Lastfm
     /// authorisation page. Linked directly from the config page.
     /// </summary>
     [Route("/Lastfm/AuthRedirect", "GET")]
+    [Unauthenticated]
     public class AuthRedirectRequest : IReturnVoid
     {
     }
@@ -52,6 +57,7 @@ namespace Lastfm
     /// key and returns a plain HTML result page.
     /// </summary>
     [Route("/Lastfm/CompleteAuthRedirect", "GET")]
+    [Unauthenticated]
     public class CompleteAuthRedirectRequest : IReturnVoid
     {
     }
